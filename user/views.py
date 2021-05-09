@@ -51,7 +51,7 @@ class UserViewSet(viewsets.ViewSet):
         user = UserSerializer(data={
             'name': request.data.get('name', None),
             'email': request.data.get('email', None),
-            'password': password
+            'password': str(password.hexdigest())
         })
 
         if user.is_valid(raise_exception=True):
@@ -65,7 +65,7 @@ class UserViewSet(viewsets.ViewSet):
             user = User.objects.get(email=request.data.get('email', None))
             password = hashlib.sha256(request.data.get('password', None).encode())
 
-            if password == user.password:
+            if password.hexdigest() == user.password:
                 encoded_jwt = jwt.encode({
                     'user_id': user.id,
                     'exp': datetime.now().timestamp() * 1000 + 604800000,

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import jwt
 from django.shortcuts import render
 from rest_framework import viewsets
@@ -9,6 +11,29 @@ from sale.serializer import SaleSerializer, SaleProductSerializer
 
 
 class SaleViewSet(viewsets.ViewSet):
+    def estimate(self, request):
+        decrypted_token = jwt.decode(
+            request.META.get('HTTP_AUTHORIZATION'),
+            key='askdasdiuh123i1y98yejas9d812hiu89dqw9',
+            algorithms='HS256'
+        ) if request.META.get('HTTP_AUTHORIZATION', None) is not None else None
+
+        if decrypted_token is not None and decrypted_token.get('user_id', None) is not None:
+            current_date = datetime.now().timestamp() * 1000
+            first_day = Sale.objects.filter(time_of_creation__lt=current_date,
+                                            time_of_creation__gt=(current_date - 86400000)).count()
+            second_day = Sale.objects.filter(time_of_creation__lt=(current_date - 86400000),
+                                             time_of_creation__gt=(current_date - 86400000 * 2)).count()
+            third_day = Sale.objects.filter(time_of_creation__lt=(current_date - 86400000 * 2),
+                                            time_of_creation__gt=(current_date - 86400000 * 4)).count()
+            return Response({
+                'first_day': first_day,
+                'second_day': second_day,
+                'third_day': third_day
+            })
+        else:
+            return Response(status=401)
+
     def retrieve(self, request, pk=None):
         decrypted_token = jwt.decode(
             request.META.get('HTTP_AUTHORIZATION'),
